@@ -2,15 +2,15 @@
 while true
 do
 	# Listen for connctions
-	nc -v -v -w 1 -l 25
+	sudo nc -v -v -w 1 -l 25
 
-        DAY=$(/usr/bin/date +"%Y%m%d")
-        TIME=$(/usr/bin/date +"%H%M%S")
+        DAY=$(date +"%Y%m%d")
+        TIME=$(date +"%H%M%S")
 
-	LOGFILE="/home/Erik/c/camera/log/camera-$DAY.log"
+	LOGFILE="/home/erikp/work/camera/log/camera-$DAY.log"
 
 	# Spawn the motion detect script
-	/home/Erik/c/camera/motiondetected.sh >> $LOGFILE &	
+	/home/erikp/work/camera/motiondetected.sh >> $LOGFILE &	
 
 	echo "Motion detect at $DAY $TIME"
 
