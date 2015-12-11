@@ -10,7 +10,7 @@
 ############################################################################################
 
 # Config. No trailing slash on directories
-CAPTURESECONDS=120;
+CAPTURESECONDS=60;
 IMGDIR="/home/erikp/work/camera/data";
 LOGDIR="/home/erikp/work/camera/log";
 REQDATE=$1

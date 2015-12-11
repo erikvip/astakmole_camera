@@ -1,8 +1,13 @@
 #!/bin/bash
 
+###############################################################################
 # Fetch an image from the camera and save it to DAY.TIME/TIME.jpg
-# Loops for 120 times - which should be around 2 minutes
-
+# ~~Loops for 120 times - which should be around 2 minutes~~
+# Updated to loop 60 times, or about 60 seconds.
+# Verified the Astek Mole Camera will fire the even tracking email
+# Every 60 seconds when there is continuous motion (well, seems like 
+# 61 seconds, probably due to lag in capture / smtp relay)
+###############################################################################
 
 DAY=$(date +"%Y%m%d")
 TIME=$(date +"%H:%M:%S")
@@ -11,7 +16,7 @@ CAM_USER=admin
 CAM_PASS=admin
 echo "Motion detect at $DAY $TIME" >> $LOGFILE
 
-c=120
+c=60
 
 while [ "$c" -gt 0 ]
 do
