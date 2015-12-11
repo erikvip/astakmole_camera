@@ -7,9 +7,11 @@
 DAY=$(date +"%Y%m%d")
 TIME=$(date +"%H:%M:%S")
 LOGFILE="/home/erikp/work/camera/log/camera-$DAY.log"
+CAM_USER=admin
+CAM_PASS=admin
 echo "Motion detect at $DAY $TIME" >> $LOGFILE
 
-c=10
+c=120
 
 while [ "$c" -gt 0 ]
 do
@@ -17,7 +19,8 @@ do
 
 	DAY=$(date +"%Y%m%d")
 	TIME=$(date +"%H%M%S")
-	URL="http://10.0.0.120/tmpfs/auto.jpg?$DAY$TIME"
+
+	URL="http://${CAM_USER}:${CAM_PASS}@10.0.0.120/tmpfs/auto.jpg?$DAY$TIME"
 
 	# DATA BASE PATH
 	DATAPATH="/home/erikp/work/camera/data/$DAY"
@@ -25,7 +28,7 @@ do
 	if [ ! -d $DATAPATH ]; then
 		mkdir $DATAPATH
 	fi
-	wget --timeout=10 -q -O "$DATAPATH/$TIME.jpg" "$URL" 
+	wget --timeout=2 -q -O "$DATAPATH/$TIME.jpg" "$URL" 
 	
 	if [ ! -s "$DATAPATH/$TIME.jpg" ]; then
 		# File is 0 bytes, an error or timeout occured

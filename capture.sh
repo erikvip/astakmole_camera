@@ -1,13 +1,16 @@
 #!/bin/bash
 
 # Fetch an image from the camera and save it to DAY/TIME.jpg
+CAM_USER=admin
+CAM_PASS=admin
 
 while true
 do
 
 	DAY=$(/bin/date +"%Y%m%d")
 	TIME=$(/bin/date +"%H%M%S")
-	URL="http://10.0.0.120/tmpfs/auto.jpg?$DAY$TIME"
+	#URL="http://10.0.0.120/tmpfs/auto.jpg?$DAY$TIME"
+	URL="http://${CAM_USER}:${CAM_PASS}@10.0.0.120/tmpfs/auto.jpg?$DAY$TIME"
 
 	# DATA BASE PATH
 	DATAPATH="/home/erikp/work/camera/data/$DAY"
@@ -15,7 +18,7 @@ do
 	if [ ! -d $DATAPATH ]; then
 		mkdir $DATAPATH
 	fi
-	wget --timeout=10 -q -O "$PATH/$TIME.jpg" "$URL" 
+	wget --timeout=10 -q -O "$DATAPATH/$TIME.jpg" "$URL" 
 	
 	if [ ! -s "$DATAPATH/$TIME.jpg" ]; then
 		# File is 0 bytes, an error or timeout occured

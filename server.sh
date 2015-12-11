@@ -1,7 +1,7 @@
 #!/bin/bash
 while true
 do
-	# Listen for connctions
+	# Listen for connections
 	sudo nc -v -v -w 1 -l 25
 
         DAY=$(date +"%Y%m%d")
