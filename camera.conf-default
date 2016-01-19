@@ -1,0 +1,3 @@
+CAM_USER="Astek Camera Username"
+CAM_PASS="Astek Camera Password"
+CAM_HOST="Astek Camera IP Address / Hostname"
