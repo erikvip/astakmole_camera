@@ -3,7 +3,7 @@
 ############################################################################################
 # Convert all the JPG's in the Camera directory into an animated gif
 #
-# Works in conjunction with the camera server.sh & motiondetect.sh scripts
+# Works in conjunction with the camera server.sh & motiondetected.sh scripts
 #
 # Expects a date, in the form YYYYMMDD, which should be found under $IMGDIR and $LOGDIR
 # We parse the log file to find the start of the motion
@@ -37,10 +37,14 @@ main() {
     [ ! -d "$OUTPUTDIR" ] && mkdir $OUTPUTDIR;
     [ ! -d "$PROCESSEDDIR" ] && mkdir $PROCESSEDDIR;
 
+    echo "${EVENTCOUNT} Total Events for ${REQDATE}"
+
     COUNT=0;
     for e in $EVENTS; do
         (( COUNT += 1))
-        
+    
+        EVENTNUMBER=$(printf %02d ${COUNT});
+
         # STARTTIME and ENDTIME get set in add_seconds
         add_seconds $e $CAPTURESECONDS
         WILDCARD="${STARTTIME}..${ENDTIME}";
@@ -51,7 +55,11 @@ main() {
 
         TOTALDONE=$(echo $COUNT / $EVENTCOUNT \* 100 | bc -l | xargs printf %0.1f);
 
-        echo "Start event #${COUNT} of ${EVENTCOUNT}. Overall: ${TOTALDONE}% done.";
+        #echo -ne "\033[2K\rEvent #${COUNT} of ${EVENTCOUNT}. Overall: ${TOTALDONE}% done.\n";
+        echo -ne "\033[2K\r";
+        ProgressBar ${COUNT} ${EVENTCOUNT} "Event #${COUNT} of ${EVENTCOUNT}. Total";
+        echo ;
+
 
         RUNCOUNT=0;
         for f in $IMAGEFILES; do
@@ -62,21 +70,46 @@ main() {
             PERDONE=$(echo $RUNCOUNT / $IMAGECOUNT \* 100 | bc -l | xargs printf %0.1f );
             CTIME="${REQDATE:0:4}-${REQDATE:4:2}-${REQDATE:6:2} ${FILETIME:0:2}:${FILETIME:2:2}:${FILETIME:4:2}";
             PADRUNCOUNT=$(printf %02d $RUNCOUNT);
-            echo "Processing Event #${COUNT} (${e}) File: $FILETIME ${RUNCOUNT} of ${IMAGECOUNT} ${PERDONE}% done ...";
+            #echo -ne "Processing Event #${COUNT} (${e}) File: $FILETIME ${RUNCOUNT} of ${IMAGECOUNT} ${PERDONE}% done ...\r";
+            ProgressBar ${RUNCOUNT} ${IMAGECOUNT} "Processing Event #${COUNT} (${e}) File: $FILETIME ${RUNCOUNT} of ${IMAGECOUNT}.";
+
 
             #mogrify -fill white -gravity NorthEast -pointsize 28 -draw "text 0,0 '${CTIME}'" -undercolor black -compress JPEG -quality 8 -strip $f
             #mogrify -fill white -gravity NorthEast -pointsize 28 -draw "text 0,0 '${CTIME}'" -undercolor black -compress JPEG -quality 1 -strip $f
             mogrify -fill white -gravity NorthEast -pointsize 28 -draw "text 0,0 'Event #${COUNT}/${EVENTCOUNT} ${CTIME} #${PADRUNCOUNT}/${IMAGECOUNT}'" -undercolor black $f
         done;
 
+        # Output a new line to clear status line, only if we processed something
+        #[ $RUNCOUNT -gt 0 ] && echo -ne "\r" && echo -ne "\033[2K"
+
         # Now make the gif image
-        GIFNAME="${REQDATE}_Event-${COUNT}_${STARTTIME}-${ENDTIME}.gif";
+        GIFNAME="${REQDATE}_Event-${EVENTNUMBER}_${STARTTIME}-${ENDTIME}.gif";
+        MP4NAME="${REQDATE}_Event-${EVENTNUMBER}_${STARTTIME}-${ENDTIME}.mp4";
         [ ! -d "$PROCESSEDDIR/$COUNT" ] && mkdir "$PROCESSEDDIR/$COUNT";
 
-        echo "Building GIF $GIFNAME ...";
-        convert -delay 50 $IMAGEFILES -loop 0 "${OUTPUTDIR}/$GIFNAME" && mv $IMAGEFILES "$PROCESSEDDIR/$COUNT"
+        #[ $IMAGECOUNT -gt 0 ] && mv $IMAGEFILES "$PROCESSEDDIR/$COUNT";
+        if [ $IMAGECOUNT -gt 0 ]; then
+            echo -ne "\r\033[2KBuilding MP4 $MP4NAME\r"
+            mv $IMAGEFILES "$PROCESSEDDIR/$COUNT";
+            ffmpeg -loglevel 16 -framerate 5 -pattern_type glob -i "${PROCESSEDDIR}/${COUNT}/*.jpg" -c:v libx264 -vf "fps=30,format=yuv420p" "${OUTPUTDIR}/${MP4NAME}"
+        fi
+
+        # Move cursor up one line
+        echo -ne "\033[1A";
 
     done;
+
+    # Now build the entire day into a single video...
+    # Create a list.txt file with each file on a line, prefixed with "file "
+    echo "Building All Events into single video file"
+    MP4NAME="${REQDATE}_All_Events.mp4";
+
+    # If the full day file already exists, remove it so we can update it again, incase mid-day build was run
+    [ -f "${MP4NAME}" ] && rm "${MP4NAME}"
+    find "${OUTPUTDIR}" -size +100k -iname '*_Event-*.mp4' | sort | awk '{ print "file "$0 }' > "${OUTPUTDIR}/fflist.txt"
+    ffmpeg -f concat -i "${OUTPUTDIR}/fflist.txt" -c copy "${OUTPUTDIR}/${MP4NAME}"
+    
+
 }
 
 ########################################################################
@@ -108,10 +141,37 @@ add_seconds() {
     [ $ENDMIN -ge 60 ] && ENDMIN=$(expr $ENDMIN - 60) && (( HOURADD += 1 ));
 
     ENDHOUR=$(expr $HOUR + $HOURADD);
-    [ $ENDHOUR -ge 23 ] && ENDHOUR=0;   # Crossing midnight but oh well...camera motion track breaks anyway
+    [ $ENDHOUR -ge 23 ] && ENDHOUR=23 && ENDMIN=59 && ENDSEC=59   # Crossing midnight but oh well...camera motion track breaks anyway
 
     ENDTIME=$(printf %02d $ENDHOUR $ENDMIN $ENDSEC);
 }
+
+#######################
+# Progress bar from
+# https://github.com/fearside/ProgressBar/
+# Modified to show a custom message
+
+######################
+function ProgressBar {
+    # Process data
+        let _progress=(${1}*100/${2}*100)/100
+        let _done=(${_progress}*4)/10
+        let _left=40-$_done
+        #let _msg="\"${3}\""
+
+
+    # Build progressbar string lengths
+        _done=$(printf "%${_done}s")
+        _left=$(printf "%${_left}s")
+
+    # 1.2 Build progressbar strings and print the ProgressBar line
+    # 1.2.1 Output example:
+    # 1.2.1.1 Progress : [########################################] 100%
+    printf "\r${3} Progress : [${_done// /#}${_left// /-}] ${_progress}%%"
+
+}
+
+
 
 # Main exec
 main
