@@ -1,19 +1,23 @@
 #!/bin/bash
-
+#
 # Fetch an image from the camera and save it to DAY/TIME.jpg
-CAM_USER=admin
-CAM_PASS=admin
+#
+
+# Root dir of this script
+ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# CAM_USER CAM_PASS and CAM_HOST config variables
+source "${ROOTDIR}/camera.conf";
 
 while true
 do
 
 	DAY=$(/bin/date +"%Y%m%d")
 	TIME=$(/bin/date +"%H%M%S")
-	#URL="http://10.0.0.120/tmpfs/auto.jpg?$DAY$TIME"
-	URL="http://${CAM_USER}:${CAM_PASS}@10.0.0.120/tmpfs/auto.jpg?$DAY$TIME"
+	URL="http://${CAM_USER}:${CAM_PASS}@${CAM_HOST}/tmpfs/auto.jpg?$DAY$TIME"
 
 	# DATA BASE PATH
-	DATAPATH="/home/erikp/work/camera/data/$DAY"
+	DATAPATH="${ROOTDIR}/data/$DAY"
 	
 	if [ ! -d $DATAPATH ]; then
 		mkdir $DATAPATH

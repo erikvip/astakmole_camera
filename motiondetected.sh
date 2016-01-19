@@ -9,14 +9,30 @@
 # 61 seconds, probably due to lag in capture / smtp relay)
 ###############################################################################
 
+# Root dir of this script
+ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Day and time for right now
 DAY=$(date +"%Y%m%d")
-TIME=$(date +"%H:%M:%S")
-LOGFILE="/home/erikp/work/camera/log/camera-$DAY.log"
-CAM_USER=admin
-CAM_PASS=admin
+TIME=$(date +"%H%M%S")
+LOGFILE="${ROOTDIR}/log/camera-$DAY.log"
+
+# CAM_USER CAM_PASS and CAM_HOST config variables
+source "${ROOTDIR}/camera.conf";
+
+# Seconds to grab from camera (this is how many times we run the loop)
+c=60
+
+#Should only be 1 copy of this script running, exit() if we're already running
+PCOUNT=$(ps -ef | grep -v grep | grep -c "bash $0");
+
+#if [[ $PCOUNT -gt 1 ]]; then
+#	echo "${TIME} Script is already running. Exiting."
+#	exit 1
+#fi;
+
 echo "Motion detect at $DAY $TIME" >> $LOGFILE
 
-c=60
 
 while [ "$c" -gt 0 ]
 do
@@ -25,10 +41,10 @@ do
 	DAY=$(date +"%Y%m%d")
 	TIME=$(date +"%H%M%S")
 
-	URL="http://${CAM_USER}:${CAM_PASS}@10.0.0.120/tmpfs/auto.jpg?$DAY$TIME"
+	URL="http://${CAM_USER}:${CAM_PASS}@${CAM_HOST}/tmpfs/auto.jpg?$DAY$TIME"
 
 	# DATA BASE PATH
-	DATAPATH="/home/erikp/work/camera/data/$DAY"
+	DATAPATH="${ROOTDIR}/data/$DAY"
 
 	if [ ! -d $DATAPATH ]; then
 		mkdir $DATAPATH
@@ -43,7 +59,7 @@ do
 		rm -I "$DATAPATH/$TIME.jpg"
 		sleep 1
 		
-	else
+#	else
 		# File size is normal
 		# NOOP
 		:
@@ -59,8 +75,6 @@ do
 
 
 	fi
-	
-
 
 done
 
