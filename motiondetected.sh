@@ -49,7 +49,7 @@ do
 	if [ ! -d $DATAPATH ]; then
 		mkdir $DATAPATH
 	fi
-	wget --timeout=2 -q -O "$DATAPATH/$TIME.jpg" "$URL" 
+	wget --timeout=2 --tries=1 -q -O "$DATAPATH/$TIME.jpg" "$URL" 
 	
 	if [ ! -s "$DATAPATH/$TIME.jpg" ]; then
 		# File is 0 bytes, an error or timeout occured
@@ -59,7 +59,10 @@ do
 		rm -I "$DATAPATH/$TIME.jpg"
 		sleep 1
 	else
-		notify-send -i "$DATEPATH/$TIME" "Motion Detected" "$DAY at $TIME. Recording started..."
+		if [ "$NOTIFY" == true ]; then
+			notify-send -i "$DATEPATH/$TIME" "Motion Detected" "$DAY at $TIME. Recording started..."
+			NOTIFY=false
+		fi
 	fi
 
 
