@@ -212,17 +212,24 @@
     function show_video(el) {
         container = document.getElementById('video');
 
+        video = container.querySelectorAll('video source')[0];
+
+
         f = el.dataset.file;
         html = '<video width="320" height="240" controls><source src="'+f+'" type="video/mp4"> Your browser does not support the video tag.</video>';
-        video.innerHTML = video;
+        //video.innerHTML = video;
+        container.innerHTML=html;
+        //video.src = f;
         b = document.body;
-/*        
+
+        console.log(video);
+
         className='dim';
         if (b.classList)
             b.classList.add(className);
         else
             b.className += ' ' + className;
-*/            
+
     }
 
 </script>
