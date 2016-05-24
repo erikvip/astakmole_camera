@@ -1,0 +1,70 @@
+GET /iphone.mov HTTP/1.0
+User-Agent: QuickTime/7.6.4 (qtver=7.6.4;os=Windows NT 5.1Service Pack 3)
+x-sessioncookie: duJFx9yhAACSrS4ABoAAAA
+Accept: application/x-rtsp-tunnelled
+Pragma: no-cache
+Cache-Control: no-cache
+Authorization: Basic YWRtaW46YWRtaW4=
+
+HTTP/1.0 200 OK
+Server: HiIpcam/V100R003 VodServer/1.0.0
+Connection: Close
+Cache-Control: no-store
+Pragma: no-cache
+Content-Type: application/x-rtsp-tunnelled
+
+RTSP/1.0 200 OK
+Server: HiIpcam/V100R003 VodServer/1.0.0
+CSeq: 1
+Cache-Control: no-cache
+Content-length: 421
+Date: Wed, 5 Dec 2007 13:01:00 GMT
+Expires: Wed, 5 Dec 2007 13:01:00 GMT
+Content-Type: application/sdp
+Content-Base: rtsp://10.0.0.120/iphone.mov/
+
+v=0
+o=StreamingServer 3441443066 1110182530000 IN IP4 10.0.0.120
+s=\iphone.mov
+u=http:///
+e=admin@
+c=IN IP4 0.0.0.0
+b=AS:360
+t=0 0
+a=range:npt=now-
+a=control:*
+m=video 0 RTP/AVP 96
+b=AS:256
+a=rtpmap:96 H264/90000
+a=fmtp:96 packetization-mode=0;profile-level-id=4D400C;sprop-parameter-sets=Z0LgHtqCgPRA,aM48gA==
+a=control:trackID=3
+m=audio 0 RTP/AVP 8
+b=AS:64
+a=rtpmap:8 PCMA/8000/1
+a=control:trackID=4
+RTSP/1.0 200 OK
+Server: HiIpcam/V100R003 VodServer/1.0.0
+Cseq: 2
+Cache-Control: no-cache
+Session:: 11551127
+Date: Wed, 5 Dec 2007 13:01:00 GMT
+Expires: Wed, 5 Dec 2007 13:01:00 GMT
+Transport: RTP/AVP/TCP;unicast;interleaved=0-1;ssrc=000026E9
+
+RTSP/1.0 200 OK
+Server: HiIpcam/V100R003 VodServer/1.0.0
+Cseq: 3
+Cache-Control: no-cache
+Session:: 11551127
+Date: Wed, 5 Dec 2007 13:01:00 GMT
+Expires: Wed, 5 Dec 2007 13:01:00 GMT
+Transport: RTP/AVP/TCP;unicast;interleaved=2-3;ssrc=000026B9
+
+RTSP/1.0 200 OK
+Server: HiIpcam/V100R003 VodServer/1.0.0
+Cseq: 4
+Session: 11551127
+Range: npt=now-
+RTP-Info: url=rtsp://10.0.0.120/iphone.mov/trackID=3;seq=0;rtptime=3630017112,url=rtsp://10.0.0.120/iphone.mov/trackID=4;seq=0;rtptime=1467992800
+
+$.......W.....&.................QEZCAP...............]qfcfepuIvpwuuutpq.dbinapY.W.V..............................RV.......BwE....[{cbf}GZZ@qgn....`vRUW^ZZDBNuwqOQ...\@X..RtrwNC$.......W.....&.O}x|C..F..~..`mj{.AP........T.................................................]BHLAXum...lyIAt~gffamnmgsv|ed.vJF..^LAZMts{g``fdysqs}}}.|uGW.PvgcmzuFRQ_N~ead`..^$.......W.. ..&..Wr..E...............................\GNqwX....\CP.....UxbnnbeJ@Nw{faac`g.IE[Mup{e~.zervqsydazu\..UT...................................|mj.hc~@..Czn....hik.....$.......W.....&....................kiij.jhmd{da`afp......WR...................................................^]......\ND......DG.........U[@X..............T........QV........

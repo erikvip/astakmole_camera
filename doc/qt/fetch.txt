@@ -1,0 +1,9 @@
+GET /iphone.mov HTTP/1.0
+User-Agent: QuickTime/7.6.4 (qtver=7.6.4;os=Windows NT 5.1Service Pack 3)
+x-sessioncookie: duJFx9yhAACSrS4ABoBBBB
+Accept: application/x-rtsp-tunnelled
+Pragma: no-cache
+Cache-Control: no-cache
+Authorization: Basic YWRtaW46YWRtaW4=
+
+

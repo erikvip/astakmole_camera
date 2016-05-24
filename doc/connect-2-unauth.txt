@@ -1,0 +1,19 @@
+GET /iphone.mov HTTP/1.0
+User-Agent: QuickTime/7.6.4 (qtver=7.6.4;os=Windows NT 5.1Service Pack 3)
+x-sessioncookie: duJFx9yhAACSrS4ABoAAAA
+Accept: application/x-rtsp-tunnelled
+Pragma: no-cache
+Cache-Control: no-cache
+
+HTTP/1.0 401 Unauthorized
+Server: thttpd/2.25b 29dec2003
+Content-Type: text/html; charset=iso-8859-1
+Date: Tue, 16 Feb 2016 00:17:26 GMT
+Last-Modified: Tue, 16 Feb 2016 00:17:26 GMT
+Accept-Ranges: bytes
+Connection: close
+Cache-Control: no-cache,no-store
+WWW-Authenticate: Basic realm="/"
+
+<html>
+<head>
