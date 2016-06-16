@@ -42,6 +42,16 @@ this process yet.  The procedure is documented in doc/rtsp.  It just needs a wra
 handle the connection setup, and then proxy it to a regular RTSP stream, or dump it to a video file,
 or whatever...
 
+## Usage
 
+- Configure the Mole motion detection / email to send an email when a new motion event occurs. 
+- **But** use your local machine for the SMTP server (the script starts recording whenever a connect on port 25/smtp is received)
+- Copy **camera.conf-default** to **camera.conf** and update the URL and login info for the camera
+- Run **server.sh**. It currently runs in the foreground, so you'll want to start it up in tmux or screen
+
+This script is really rough at the moment, and does not clean up old files, so you may want to
+setup a cron job to clear out old days under data/ and log/ or something...   
+
+Works good for my purposes.  If you've got a Astak Mole camera, and would like to try it, I'd love to get some feedback!
 
 
