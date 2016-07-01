@@ -64,8 +64,7 @@ do
 			NOTIFY=false
 		fi
 	fi
-
-
-
 done
 
+# Now create an MP4 video from the still images
+/usr/bin/nice -n 19 "${ROOTDIR}"/compressAndMakeGif.sh "${DAY}"

@@ -91,7 +91,7 @@ main() {
         if [ $IMAGECOUNT -gt 0 ]; then
             echo -ne "\r\033[2KBuilding MP4 $MP4NAME\r"
             mv $IMAGEFILES "$PROCESSEDDIR/$COUNT";
-            ffmpeg -loglevel 16 -framerate 5 -pattern_type glob -i "${PROCESSEDDIR}/${COUNT}/*.jpg" -c:v libx264 -vf "fps=30,format=yuv420p" "${OUTPUTDIR}/${MP4NAME}"
+            ffmpeg -y -loglevel 16 -framerate 5 -pattern_type glob -i "${PROCESSEDDIR}/${COUNT}/*.jpg" -c:v libx264 -vf "fps=30,format=yuv420p" "${OUTPUTDIR}/${MP4NAME}"
         fi
 
         # Move cursor up one line
@@ -107,7 +107,7 @@ main() {
     # If the full day file already exists, remove it so we can update it again, incase mid-day build was run
     [ -f "${MP4NAME}" ] && rm "${MP4NAME}"
     find "${OUTPUTDIR}" -size +100k -iname '*_Event-*.mp4' | sort | awk '{ print "file "$0 }' > "${OUTPUTDIR}/fflist.txt"
-    ffmpeg -f concat -i "${OUTPUTDIR}/fflist.txt" -c copy "${OUTPUTDIR}/${MP4NAME}"
+    ffmpeg -y -f concat -i "${OUTPUTDIR}/fflist.txt" -c copy "${OUTPUTDIR}/${MP4NAME}"
     
 
 }
