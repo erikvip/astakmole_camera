@@ -106,6 +106,9 @@
 
 ?><!doctype html>
 <html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=2" />
+    <meta name="viewport" content="width=420,initial-scale=1, maximum-scale=1">
 <style>
     #live {
         width: 640px;
@@ -144,6 +147,14 @@
         display: block;
     }
 
+    #video #close-btn img {
+        width: 48px;
+        height: 48px;
+        position: absolute;
+        top: -30px;
+        left: -30px;
+    }
+
     body.dim {
         background-color: #000;
     }
@@ -170,9 +181,8 @@
         color: #333;
     }
 </style>
+</head>
 <body>
-<div id="page">
-
     <div id="video">
         <video width="320" height="240" controls>
           <source src="data/20151214/output/20151214_All_Events.mp4" type="video/mp4">
@@ -180,11 +190,13 @@
         </video>
     </div>
 
+<div id="page">
+<!--
     <div id="live">
         <img src="live.jpg.php" alt="Live feed" />
         <p id="livestatus">Live Image</p>
     </div>
-
+-->
     <ul id="camera-dates">
         <?php
              foreach($events as $day=>$e) {
@@ -295,12 +307,19 @@
             width = 640;
             height = 480;
         }
-        html = '<video width="'+width+'" height="'+height+'" controls autoplay><source src="'+f+'" type="video/mp4"> Your browser does not support the video tag.</video>';
+        html = '<video width="'+width+'" height="'+height+'" controls autoplay><source src="'+f+'" type="video/mp4"> Your browser does not support the video tag.</video><a href="javascript:void(0);" id="close-btn"><img src="static/close.png" alt="Close" /></a>';
         //video.innerHTML = video;
         container.innerHTML=html;
+        closebtn = container.querySelectorAll('a#close-btn')[0];
+
+        closebtn.addEventListener('click', function() {
+            console.log(document.body.classList);
+            console.log(document.body.className);
+            bodycls = document.body.classList.remove('dim');
+            
+        });
+
         b = document.body;
-        
-       
         if (window.isPhone) {
             className='dim';
             if (b.classList)
@@ -310,6 +329,17 @@
         }
 
     }
+    Array.prototype.remove = function() {
+        var what, a = arguments, L = a.length, ax;
+        while (L && this.length) {
+            what = a[--L];
+            while ((ax = this.indexOf(what)) !== -1) {
+                this.splice(ax, 1);
+            }
+        }
+        return this;
+    };
+
 
 </script>
 </body>
