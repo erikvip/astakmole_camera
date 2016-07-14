@@ -10,61 +10,115 @@
 ###############################################################################
 
 # Root dir of this script
-ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )";
+SCRIPT_FILE="${BASH_SOURCE[0]}";
 
-# Day and time for right now
-DAY=$(date +"%Y%m%d")
-TIME=$(date +"%H%M%S")
-LOGFILE="${ROOTDIR}/log/camera-$DAY.log"
-
-# CAM_USER CAM_PASS and CAM_HOST config variables
-source "${ROOTDIR}/camera.conf";
-
-# Seconds to grab from camera (this is how many times we run the loop)
-c=60
-
-#Should only be 1 copy of this script running, exit() if we're already running
-PCOUNT=$(ps -ef | grep -v grep | grep -c "bash $0");
-
-#if [[ $PCOUNT -gt 1 ]]; then
-#	echo "${TIME} Script is already running. Exiting."
-#	exit 1
-#fi;
-
-echo "Motion detect at $DAY $TIME" >> $LOGFILE
-NOTIFY=true
-
-while [ "$c" -gt 0 ]
-do
-	c=$((c-1))
-
+setup() {
+	# Day and time for right now
 	DAY=$(date +"%Y%m%d")
 	TIME=$(date +"%H%M%S")
+	LOGFILE="${ROOTDIR}/log/camera-$DAY.log"
 
-	URL="http://${CAM_USER}:${CAM_PASS}@${CAM_HOST}/tmpfs/auto.jpg?$DAY$TIME"
+	# CAM_USER CAM_PASS and CAM_HOST config variables
+	source "${ROOTDIR}/camera.conf";
 
-	# DATA BASE PATH
-	DATAPATH="${ROOTDIR}/data/$DAY"
+	# Seconds to grab from camera (this is how many times we run the loop)
+	c=60
+}
 
-	if [ ! -d $DATAPATH ]; then
-		mkdir $DATAPATH
-	fi
-	wget --timeout=2 --tries=1 -q -O "$DATAPATH/$TIME.jpg" "$URL" 
-	
-	if [ ! -s "$DATAPATH/$TIME.jpg" ]; then
-		# File is 0 bytes, an error or timeout occured
-		echo "ERROR: $DATAPATH/$TIME.jpg is 0 bytes" >> $LOGFILE
-		ls -l "$DATAPATH/$TIME.jpg" >> $LOGFILE
-		echo "Deleting $DATAPATH/$TIME.jpg and delaying for 1 second..." >> $LOGFILE
-		rm -I "$DATAPATH/$TIME.jpg"
-		sleep 1
-	else
-		if [ "$NOTIFY" == true ]; then
-			notify-send -i "$DATEPATH/$TIME" "Motion Detected" "$DAY at $TIME. Recording started..."
-			NOTIFY=false
+main() {
+	echo "Motion detect at $DAY $TIME" >> $LOGFILE
+	NOTIFY=true
+
+	while [ "$c" -gt 0 ]
+	do
+		c=$((c-1))
+
+		DAY=$(date +"%Y%m%d")
+		TIME=$(date +"%H%M%S")
+
+		URL="http://${CAM_USER}:${CAM_PASS}@${CAM_HOST}/tmpfs/auto.jpg?$DAY$TIME"
+
+		# DATA BASE PATH
+		DATAPATH="${ROOTDIR}/data/$DAY"
+
+		if [ ! -d $DATAPATH ]; then
+			mkdir $DATAPATH
 		fi
-	fi
-done
+		wget --timeout=2 --tries=1 -q -O "$DATAPATH/$TIME.jpg" "$URL"
 
-# Now create an MP4 video from the still images
-/usr/bin/nice -n 19 "${ROOTDIR}"/compressAndMakeGif.sh "${DAY}"
+		if [ ! -s "$DATAPATH/$TIME.jpg" ]; then
+			# File is 0 bytes, an error or timeout occured
+			echo "ERROR: $DATAPATH/$TIME.jpg is 0 bytes" >> $LOGFILE
+			ls -l "$DATAPATH/$TIME.jpg" >> $LOGFILE
+			echo "Deleting $DATAPATH/$TIME.jpg and delaying for 1 second..." >> $LOGFILE
+			rm -I "$DATAPATH/$TIME.jpg"
+			sleep 1
+		else
+			if [ "$NOTIFY" == true ]; then
+				notify-send -i "$DATEPATH/$TIME" "Motion Detected" "$DAY at $TIME. Recording started..."
+				NOTIFY=false
+			fi
+		fi
+	done
+
+	# Now create an MP4 video from the still images
+	/usr/bin/nice -n 19 "${ROOTDIR}"/compressAndMakeGif.sh "${DAY}"
+}
+
+#Cleanup script
+finish() {
+	# Remove lockfile
+	rm -f "${LOCKFILE}";
+}
+
+# Check if lock exists (process is already running)
+# If so, verify the PID is still active
+# and check the timestamp, if it's over 5 minutes, then
+# kill the script and run now
+verify_lock() {
+	LOCKFILE="${ROOTDIR}/data/$(basename ${SCRIPT_FILE} .sh).lock";
+	if [ -e ${LOCKFILE} ]; then
+		# Lockfile exits, verify the PID is running
+		kill -0 `cat ${LOCKFILE}`;
+		if [[ $? = 0 ]]; then
+			# PID exists
+			local _lastmod=$(stat -c "%Y" "${LOCKFILE}") _now=$(date +%s) _diff=0
+			let _diff=$_now-$_lastmod
+
+#			echo "last: $_lastmod  now: $_now  diff: $_diff "  >> $LOGFILE
+			if [ "$_diff" -gt 300 ]; then
+
+				echo "Motion detection script has stalled. Terminating process." >> $LOGFILE
+				rm -f "${LOCKFILE}"
+				acquire_lock
+			else
+				echo "Motion detection is already running. Quitting..."
+				exit 1
+			fi
+		else
+			# PID does NOT exist. Stale lock file
+			echo "Removing stale lock file." >> $LOGFILE
+			rm -f "${LOCKFILE}"
+			acquire_lock
+		fi
+	else
+		# Lockfile does not exist
+		acquire_lock
+	fi
+}
+
+# Create the lock file (execution should continue here)
+acquire_lock() {
+	echo $$ > "${LOCKFILE}"
+
+	#Run the finish method last
+	trap finish EXIT
+
+}
+
+# Main execution area
+setup
+verify_lock
+main
+finish
