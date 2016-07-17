@@ -27,7 +27,7 @@ setup() {
 }
 
 main() {
-	echo "Motion detect at $DAY $TIME" >> $LOGFILE
+	echo "Motion detected at $DAY $TIME" >> $LOGFILE
 	NOTIFY=true
 
 	while [ "$c" -gt 0 ]

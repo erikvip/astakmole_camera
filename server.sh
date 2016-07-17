@@ -21,7 +21,7 @@ do
         ${ROOTDIR}/motiondetected.sh >> $LOGFILE &	
         RET=$?
 
-        echo "Motion detect at $DAY $TIME. Return value: ${RET}"
+        echo "Motion detected at $DAY $TIME. Return value: ${RET}"
 
         
     fi;

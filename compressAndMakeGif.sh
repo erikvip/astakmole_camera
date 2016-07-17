@@ -28,8 +28,8 @@ LOGFILE="/home/erikp/work/camera/log/camera-${REQDATE}.log";
 ########################################################################
 main() {
 
-    EVENTS=$(egrep -o '[0-9]{6}$' ${LOGFILE});
-    EVENTCOUNT=$(egrep -c '[0-9]{6}$' ${LOGFILE});
+    EVENTS=$(grep 'Motion detected at' ${LOGFILE} | egrep -o '[0-9]{6}$');
+    EVENTCOUNT=$(grep -c 'Motion detected at' ${LOGFILE});
 
     # Finished gif's are moved into output, while images used are moved to processed
     OUTPUTDIR="$IMGDIR/output";
@@ -60,7 +60,6 @@ main() {
         ProgressBar ${COUNT} ${EVENTCOUNT} "Event #${COUNT} of ${EVENTCOUNT}. Total";
         echo ;
 
-
         RUNCOUNT=0;
         for f in $IMAGEFILES; do
             (( RUNCOUNT += 1 ))
@@ -73,10 +72,11 @@ main() {
             #echo -ne "Processing Event #${COUNT} (${e}) File: $FILETIME ${RUNCOUNT} of ${IMAGECOUNT} ${PERDONE}% done ...\r";
             ProgressBar ${RUNCOUNT} ${IMAGECOUNT} "Processing Event #${COUNT} (${e}) File: $FILETIME ${RUNCOUNT} of ${IMAGECOUNT}.";
 
-
             #mogrify -fill white -gravity NorthEast -pointsize 28 -draw "text 0,0 '${CTIME}'" -undercolor black -compress JPEG -quality 8 -strip $f
             #mogrify -fill white -gravity NorthEast -pointsize 28 -draw "text 0,0 '${CTIME}'" -undercolor black -compress JPEG -quality 1 -strip $f
-            mogrify -fill white -gravity NorthEast -pointsize 28 -draw "text 0,0 'Event #${COUNT}/${EVENTCOUNT} ${CTIME} #${PADRUNCOUNT}/${IMAGECOUNT}'" -undercolor black $f
+            #mogrify -fill white -gravity NorthEast -pointsize 28 -draw "text 0,0 'Event #${COUNT}/${EVENTCOUNT} ${CTIME} #${PADRUNCOUNT}/${IMAGECOUNT}'" -undercolor black $f
+            mogrify -fill white -gravity NorthEast -pointsize 28 -draw "text 0,0 'Event #${COUNT} ${CTIME} #${PADRUNCOUNT}/${IMAGECOUNT}'" -undercolor black $f
+
         done;
 
         # Output a new line to clear status line, only if we processed something
@@ -85,6 +85,7 @@ main() {
         # Now make the gif image
         GIFNAME="${REQDATE}_Event-${EVENTNUMBER}_${STARTTIME}-${ENDTIME}.gif";
         MP4NAME="${REQDATE}_Event-${EVENTNUMBER}_${STARTTIME}-${ENDTIME}.mp4";
+        PREVIEWNAME="${REQDATE}_Preview-${EVENTNUMBER}_${STARTTIME}-${ENDTIME}.gif";
         [ ! -d "$PROCESSEDDIR/$COUNT" ] && mkdir "$PROCESSEDDIR/$COUNT";
 
         #[ $IMAGECOUNT -gt 0 ] && mv $IMAGEFILES "$PROCESSEDDIR/$COUNT";
@@ -92,6 +93,9 @@ main() {
             echo -ne "\r\033[2KBuilding MP4 $MP4NAME\r"
             mv $IMAGEFILES "$PROCESSEDDIR/$COUNT";
             ffmpeg -y -loglevel 16 -framerate 5 -pattern_type glob -i "${PROCESSEDDIR}/${COUNT}/*.jpg" -c:v libx264 -vf "fps=30,format=yuv420p" "${OUTPUTDIR}/${MP4NAME}"
+            
+            echo -ne "\r\033[2KBuilding GIF Preview ${PREVIEWNAME}\r"
+            convert -resize 200x150 -delay 50 `find "${PROCESSEDDIR}/${COUNT}/" -type f -iname '*.jpg' | sort | head -10` -loop 0 "${OUTPUTDIR}/${PREVIEWNAME}";
         fi
 
         # Move cursor up one line
@@ -106,10 +110,8 @@ main() {
 
     # If the full day file already exists, remove it so we can update it again, incase mid-day build was run
     [ -f "${MP4NAME}" ] && rm "${MP4NAME}"
-    find "${OUTPUTDIR}" -size +100k -iname '*_Event-*.mp4' | sort | awk '{ print "file "$0 }' > "${OUTPUTDIR}/fflist.txt"
+    find "${OUTPUTDIR}" -size +100k -iname '*_Event-*.mp4' | sort -n -t- -k2 | awk '{ print "file "$0 }' > "${OUTPUTDIR}/fflist.txt"
     ffmpeg -y -f concat -i "${OUTPUTDIR}/fflist.txt" -c copy "${OUTPUTDIR}/${MP4NAME}"
-    
-
 }
 
 ########################################################################

@@ -3,3 +3,4 @@ log/*.log
 data/*/
 ncinput.txt
 camera.conf
+data/motiondetected.lock

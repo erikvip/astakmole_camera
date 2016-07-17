@@ -1,7 +1,7 @@
 <?php
 
     # Grab a list of all available videos
-    $videos = `find ./data/ -iname '*.mp4'`;
+    $videos = `find ./data/ -iname '*.mp4' | sort -n -t- -k2`;
     $videos = explode("\n", $videos);
     
 
@@ -76,10 +76,8 @@
         $html = "
             <table class='events'>
                 <thead>
-                    <th>File</th>
-                    <th>Event Number</th>
-                    <th>Start Time - End Time</th>
-                    <th>File Size</th>
+                    <th>Preview</th>
+                    <th>Info</th>
                 </thead>
                 <tbody>
         ";
@@ -88,13 +86,29 @@
             $fmt = "g:i:s a";
             $start = date($fmt, $e['start_time_ts']);
             $end = date($fmt, $e['end_time_ts']);
-
+            $preview = str_replace("Event", "Preview", $e['filepath']);
+            $preview = str_replace(".mp4", ".gif", $preview);
+/*
             $html .= "
                 <tr>
                     <td><a class='show-video' href='javascript:void(0);' data-file='{$e['filepath']}' title='{$e['file']}'>{$e['file']}</a></td>
                     <td>{$number}</td>
                     <td>{$start} - {$end}</td>
                     <td>" . human_filesize($e['filesize']) . "</td>
+                    <td><img src='{$preview}' /></td>
+                </tr>
+*/                
+            
+            $html .= "
+                <tr>
+                    <td class='preview'><a class='show-video' href='javascript:void(0);' data-file='{$e['filepath']}' title='{$e['file']}'><img src='{$preview}' /></a></td>
+                    <td>
+                        <a class='show-video' href='javascript:void(0);' data-file='{$e['filepath']}' title='{$e['file']}'>
+                        <b>Event #{$number}</b><br />
+                        <b>Time: </b>{$start} - {$end}<br />
+                        <b>Size: " . human_filesize($e['filesize']) . "</b><br />
+                        {$e['file']}</a>
+                    </td>
                 </tr>
             ";
         }
@@ -110,13 +124,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=2" />
     <meta name="viewport" content="width=420,initial-scale=1, maximum-scale=1">
 <style>
-    #live {
+    .desktop #leftcol {
+        width: 640px;
+    }
+    .desktop #live {
+        margin: 12px 0 0 0;
         width: 640px;
         height: 480px;
     }
-    .desktop #live {
-        float: left;
-        margin: 12px 0 0 0;
+    .phone #liveimg {
+        width: 320px;
+        height: 20px;
+    }
+    .phone .livefixed {
+        position: fixed;
+        bottom: 5px;
+        left: 32px;
+        height: 240px !important;
+    }
+    .desktop #page {
+        overflow: scroll;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 640px;
     }
     table.events {
         width: 100%;
@@ -125,24 +157,22 @@
         display: none;
         position: fixed;
         z-index: 10000;
-        right: 0;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        margin: auto;
+        left: 32px;
+        top: 30%;
         
         /* give it dimensions */
-        height: 240px;
         width: 320px;
+        height: 240px;
+        
     }
-
+/*
     body.desktop #video {
         float: left;
         height: 480px;
         width: 640px;
         margin: 12px 40px;
     }
-
+*/
     body.dim #video {
         display: block;
     }
@@ -162,6 +192,10 @@
         opacity: 0.4;
     }
 
+    .desktop table.events td.preview {
+        width: 220px;
+    }
+
     ul#camera-dates {
         list-style-type: none;
         clear: both;
@@ -172,6 +206,8 @@
         padding: 4px 16px;
         width: 75%;
     }
+    .phone ul#camera-dates { padding: 0; }
+    .phone ul#camera-dates li { width: 80%; }
     ul#camera-dates li a {
         color: #111;
         text-decoration: none;
@@ -183,20 +219,21 @@
 </style>
 </head>
 <body>
-    <div id="video">
-        <video width="320" height="240" controls>
-          <source src="data/20151214/output/20151214_All_Events.mp4" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
+    <div id="leftcol">
+        <div id="video">
+            <video width="320" height="240" controls>
+              <source src="data/20151214/output/20151214_All_Events.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+        </div>
+        <div id="live">
+            <a href="javascript:void(0);" onClick="show_live_feed();"><img id="liveimg" src="blank.jpg" alt="Click to load live image" /></a>
+            <p id="livestatus">Live Image</p>
+        </div>
     </div>
 
+
 <div id="page">
-<!--
-    <div id="live">
-        <img src="live.jpg.php" alt="Live feed" />
-        <p id="livestatus">Live Image</p>
-    </div>
--->
     <ul id="camera-dates">
         <?php
              foreach($events as $day=>$e) {
@@ -218,13 +255,11 @@
 
 <script>
 
-    addBodyCls = function(className) {
-        var b = document.body;
-        if (b.classList)
-            b.classList.add(className);
+    addCls = function(className, element) {
+        if (element.classList)
+            element.classList.add(className);
         else
-            b.className += ' ' + className;
-
+            element.className += ' ' + className;
     }
    
     detect_mobile = function() {
@@ -234,37 +269,50 @@
           return check;
         }
 
+        b = document.body;
         if (!isPhone()) {
-            addBodyCls('desktop');
+            addCls('desktop', b);
             window.isPhone = false;
         } else {
-            addBodyCls('phone');
+            addCls('phone', b);
             window.isPhone = true;
         }
     };
     ready(detect_mobile);
 
     update_live_image = function() {
-        live=document.getElementById('live');
-        liveimg = live.children[0];
-        st = document.getElementById('livestatus')
-
+        liveimg = document.getElementById('liveimg');
+        livestatus = document.getElementById('livestatus');
+        src = liveimg.src;
         liveimg.onload=function() {
-            src = liveimg.src;
             w = liveimg.width; 
             h = liveimg.height;
+            var d = new Date();
 
-            window.setInterval(function() {
-                var d = new Date();
-                var time = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds();
-                liveimg.src = src + "?r=" + d.getTime();
-                //st.innerHTML='Updated at ' + time;
+            window.setTimeout(function() {
+                liveimg.src = src + "?r=" + (d.getTime()+1);
+                livestatus.innerHTML='Updated at ' + (d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds())
             }, 500);
-
         }
     };
-    ready(update_live_image);
 
+    //We don't call update_live_image when page is loading, because
+    //It slows down everything if camera is lagging...
+    //So now we load page & wait for user to click on live image, if they wish to view it from the 'historical' page anyway
+    function show_live_feed() {
+        var liveimg = document.getElementById('liveimg');
+        if ( liveimg.alt != 'Live Image' ) {
+            liveimg.src='live.jpg.php';
+            liveimg.alt = "Live Image";
+            update_live_image();
+            window.pokecount=0;
+            if (window.isPhone == true) addCls('livefixed', liveimg);
+
+        } else {
+            if (window.pokecount++>5) document.getElementById('livestatus').innerHTML='Stop poking me!!!';
+            if (window.isPhone == true) liveimg.classList.remove('livefixed');
+        }
+    }
     show_event_date = function() {
         video = document.getElementById('#video');
         ul = document.getElementById('camera-dates');
@@ -313,10 +361,7 @@
         closebtn = container.querySelectorAll('a#close-btn')[0];
 
         closebtn.addEventListener('click', function() {
-            console.log(document.body.classList);
-            console.log(document.body.className);
             bodycls = document.body.classList.remove('dim');
-            
         });
 
         b = document.body;
